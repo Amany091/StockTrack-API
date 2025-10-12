@@ -15,17 +15,20 @@ exports.signup = asyncWrapper(async (req, res, next) => {
         password: req.body.password
     })
     const isExist = await User.findOne({ email: req.body.email })
-    if(isExist) return next(new ApiError(process.env.EMAIL_ALREADY_IN_USE, 400))
-    return res.status(201).json({ data: user })
+    if (isExist) {
+        return next(new ApiError(process.env.EMAIL_ALREADY_IN_USE, 400))
+    } else {
+        return res.status(201).json({ data: user })
+    }
 });
 
 exports.login = asyncWrapper(async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email })
     if (!user) return next(new ApiError(process.env.INVALID_CREDENTIALS, 401));
-    
+
     const isMatch = await bcrypt.compare(req.body.password, user.password)
     if (!isMatch) return next(new ApiError(process.env.INVALID_CREDENTIALS, 401))
-    
+
     const token = createToken(user._id)
     res.cookie("access_token", `Bearer ${token}`, {
         httpOnly: true,
@@ -40,7 +43,7 @@ exports.login = asyncWrapper(async (req, res, next) => {
 
 exports.logoutCtrl = asyncWrapper(async (req, res) => {
     res.clearCookie("access_token");
-    
+
     await res.send({ success: true });
 });
 
