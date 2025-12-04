@@ -5,29 +5,27 @@ const jwt = require("jsonwebtoken");
 const asyncWrapper = require("../utils/asyncWrapper");
 
 const createToken = (payload) => {
-    return jwt.sign({ userId: payload }, process.env.JWT_SECRET_KEY, { expiresIn: process.env.JWT_EXPIRE_TIME });
+    return jwt.sign({ userId: payload }, process.env.JWT_SECRET_KEY, { expiresIn:'10d' });
 }
 
 exports.signup = asyncWrapper(async (req, res, next) => {
-    const user = await User.create({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password
-    })
-    const isExist = await User.findOne({ email: req.body.email })
-    if (isExist) {
-        return next(new ApiError(process.env.EMAIL_ALREADY_IN_USE, 400))
-    } else {
-        return res.status(201).json({ data: user })
+    const {email, name, password} = req.body
+    const isExist = await User.findOne({ email: email.trim().toLowerCase() })
+    console.log(req.body, isExist)
+    if(isExist) {
+        return next(new ApiError("Email is already in use", 400));
     }
+    
+    const user = await User.create({name, email:email.trim().toLowerCase(), password})
+    return res.status(201).json({ data: user })
 });
 
 exports.login = asyncWrapper(async (req, res, next) => {
     const user = await User.findOne({ email: req.body.email })
-    if (!user) return next(new ApiError(process.env.INVALID_CREDENTIALS, 401));
+    if (!user) return next(new ApiError("Incorrect email or password", 401));
 
     const isMatch = await bcrypt.compare(req.body.password, user.password)
-    if (!isMatch) return next(new ApiError(process.env.INVALID_CREDENTIALS, 401))
+    if (!isMatch) return next(new ApiError("Incorrect email or password", 401))
 
     const token = createToken(user._id)
     res.cookie("access_token", `Bearer ${token}`, {

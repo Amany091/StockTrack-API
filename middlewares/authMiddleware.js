@@ -10,7 +10,6 @@ exports.authentication = asyncWrapper(async (req, res, next) => {
     req.cookies.access_token.startsWith("Bearer")
   ) {
     token = req.cookies.access_token.split(" ")[1];
-    console.log(token)
   }
   if (!!token === false ) return next(new ApiError("You are not logged in, please login to access this route...", 401));
   const decode = jwt.verify(token, process.env.JWT_SECRET_KEY);

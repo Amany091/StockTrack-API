@@ -16,7 +16,7 @@ dotenv.config()
 
 app.use(
     cors({
-        origin: [process.env.CLIENT_URL],
+        origin: process.env.CLIENT_URL,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         credentials: true,
     })
@@ -26,7 +26,6 @@ app.use(
 // middleware
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan("dev"))
-    console.log(`mode : ${process.env.NODE_ENV}`)
 }
 
 app.use( express.static(path.join(__dirname, "uploads")));
@@ -39,7 +38,7 @@ app.use('/api/v1/products', productsRoute)
 
 
 app.all("*", (req, res, next) => {
-    next(ApiError("can't find this route"), 404)
+   return next(new ApiError("can't find this route"), 404)
 })
 
 app.use((err, req, res, next) => {

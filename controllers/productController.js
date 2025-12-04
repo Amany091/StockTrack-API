@@ -16,7 +16,7 @@ exports.getAllProducts = asyncWrapper(async (req, res) => {
     const page = +req.query.page || 1
     const limit = +req.query.limit || 10
     const skip = (page - 1) * limit
-    // const count = await Product.countDocuments()
+    const total = await Product.countDocuments();
     const filter = {}
     const maxPrice = parseInt(req.query.maxPrice || 0)
     const minPrice = parseInt(req.query.minPrice || 0)
@@ -30,7 +30,12 @@ exports.getAllProducts = asyncWrapper(async (req, res) => {
     if(req.query.price) filter.price = req.query.price
     const products = await Product.find(filter).skip(skip).limit(limit)
     const totalProducts = await Product.countDocuments(filter)
-    return res.status(200).json({ page, limit, total: totalProducts, data: products  })
+    const hasNextPage = page * limit < totalProducts;
+    const hasPrevPage = page > 1;
+    const nextPage = hasNextPage? page+1: null
+    const prevPage = hasPrevPage? page-1: null
+    return res.status(200).json({ data: products, 
+        pagination: {page, limit, total:totalProducts, hasPrevPage, hasNextPage, nextPage, prevPage}  })
 })
 
 

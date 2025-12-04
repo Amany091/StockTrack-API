@@ -2,7 +2,6 @@ const ApiError = require("./apiError")
 const asyncWrapper = require("./asyncWrapper")
 
 exports.deleteDocument = (Model)=>{
-    
    return asyncWrapper(async(req,res,next)=>{
         const doc = await Model.findByIdAndDelete(req.params.id)
         if(!doc) return next(new ApiError(`No document for this ${req.params.id}`,404))

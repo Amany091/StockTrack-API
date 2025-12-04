@@ -32,11 +32,9 @@ const productSchema = new mongoose.Schema(
 
 
 productSchema.post("save", function (doc) {
-  console.log("doc", doc); // product info // imgCover => filename
   if (doc.imgCover) {
     const imgUrl = `${process.env.BASE_URL}/products/${doc.imgCover}`;
     doc.imgCover = imgUrl;
-    console.log(imgUrl);
   }
   if (doc.images) {
     doc.images = doc.images.map((image) => {

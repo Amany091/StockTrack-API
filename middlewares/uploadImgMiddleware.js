@@ -37,7 +37,6 @@ const multerStorage = multer.diskStorage({
     filename: function (req, file, cb) {
         const ext = file.mimetype.split("/")[1]
         const fileName = `product-${uuidv4()}-${Date.now()}.${ext}`;  
-        console.log("filename", fileName)
         cb(null, fileName)
     }
 })
