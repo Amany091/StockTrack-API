@@ -2,11 +2,9 @@ const asyncWrapper = require("../utils/asyncWrapper")
 const { getDocument, deleteDocument } = require("../utils/handler")
 const {Product} = require("../models/products")
 
-
-
 exports.createProduct = asyncWrapper(async (req, res) => {
     if (req.file) {
-        req.body.imgCover = req.file.filename
+        req.body.imgCover = req.file?.path;
     }
     const product = await Product.create(req.body)
     return res.status(201).json({ data: product })
@@ -42,6 +40,11 @@ exports.getAllProducts = asyncWrapper(async (req, res) => {
 exports.updateProduct = asyncWrapper(async (req, res) => {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true })
     return res.status(200).json({ data: product })
+})
+
+exports.deleteAllProducts = asyncWrapper(async (req,res) =>{
+    await Product.deleteMany();
+    return res.status(204).json({message: "All products deleted successfully"})
 })
 
 exports.getProduct = getDocument(Product)
