@@ -21,6 +21,7 @@ exports.signup = asyncWrapper(async (req, res, next) => {
 });
 
 exports.login = asyncWrapper(async (req, res, next) => {
+    const NODE_ENV = process.env.NODE_ENV;
     const user = await User.findOne({ email: req.body.email })
     if (!user) return next(new ApiError("Incorrect email or password", 401));
 
@@ -30,8 +31,8 @@ exports.login = asyncWrapper(async (req, res, next) => {
     const token = createToken(user._id)
     res.cookie("access_token", `Bearer ${token}`, {
         httpOnly: true,
-        secure: false,
-        sameSite: true,
+        secure: NODE_ENV === "production" ? true : false,
+        sameSite: NODE_ENV === "production" ? "none" : "lax",
         withCredentials: true,
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
