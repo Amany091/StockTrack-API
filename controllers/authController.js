@@ -3,6 +3,9 @@ const ApiError = require("../utils/apiError");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const asyncWrapper = require("../utils/asyncWrapper");
+const NODE_ENV = process.env.NODE_ENV;
+
+const isProduction = NODE_ENV === "production";
 
 const createToken = (payload) => {
     return jwt.sign({ userId: payload }, process.env.JWT_SECRET_KEY, { expiresIn:'10d' });
@@ -21,7 +24,6 @@ exports.signup = asyncWrapper(async (req, res, next) => {
 });
 
 exports.login = asyncWrapper(async (req, res, next) => {
-    const NODE_ENV = process.env.NODE_ENV;
     const user = await User.findOne({ email: req.body.email })
     if (!user) return next(new ApiError("Incorrect email or password", 401));
 
@@ -29,20 +31,26 @@ exports.login = asyncWrapper(async (req, res, next) => {
     if (!isMatch) return next(new ApiError("Incorrect email or password", 401))
 
     const token = createToken(user._id)
-    res.cookie("access_token", `Bearer ${token}`, {
+    res.cookie("access_token", token , {
         httpOnly: true,
-        secure: NODE_ENV === "production" ? true : false,
-        sameSite: NODE_ENV === "production" ? "none" : "lax",
+        secure: isProduction ? true : false,
+        sameSite: isProduction ? "none" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: "/",
-        domain: NODE_ENV === "production" ? process.env.CLIENT_DOMAIN : "localhost"
+        domain: isProduction ? process.env.CLIENT_DOMAIN : "localhost"
     });
     return res.status(200).json({ data: user })
 
 });
 
 exports.logoutCtrl = asyncWrapper(async (req, res) => {
-    res.clearCookie("access_token");
+    res.clearCookie("access_token", {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
+        path: "/",
+        domain: isProduction ? process.env.CLIENT_DOMAIN : "localhost"
+    });
 
     await res.send({ success: true });
 });
